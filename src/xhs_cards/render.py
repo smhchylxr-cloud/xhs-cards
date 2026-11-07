@@ -33,8 +33,11 @@ def build(spec, out_dir, jpeg=False, quality=92):
     os.makedirs(out_dir, exist_ok=True)
     theme = resolve_theme(spec)
     written = []
+    defaults = {key: spec[key] for key in ("compact",) if key in spec}
 
     for index, page in enumerate(spec["pages"], 1):
+        if defaults:
+            page = {**defaults, **page}
         img = layout.render_page(page, index, theme)
         stem = f"{index:02d}_{page['type']}"
         if jpeg:

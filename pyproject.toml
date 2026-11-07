@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xhs-cards"
-version = "0.1.0"
+version = "0.1.1"
 description = "Render 1080x1440 social card decks from a JSON spec. Pure Pillow, no browser, no API key."
 readme = "README.md"
 requires-python = ">=3.9"

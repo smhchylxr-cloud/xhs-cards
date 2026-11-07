@@ -61,16 +61,23 @@ def render_cover(page, theme):
     img, d = _canvas(theme)
     _head(d, page, theme)
 
+    compact = bool(page.get("compact"))
     font, lines, size = T.fit(
-        page["headline"], "bold", W - 2 * PAD + 8, 392, start=112, minimum=72, ratio=1.08
+        page["headline"],
+        "bold",
+        W - 2 * PAD + 8,
+        520 if compact else 392,
+        start=136 if compact else 112,
+        minimum=72,
+        ratio=1.08,
     )
-    y = 208
+    y = 236 if compact else 208
     for i, line in enumerate(lines):
         colour = theme.accent if i == len(lines) - 1 else theme.ink
         d.text((PAD - 4, y), line, font=font, fill=colour)
         y += int(size * 1.08)
 
-    y += 62
+    y += 76 if compact else 62
     mono = fonts.load("mono", 33)
     d.rectangle([PAD, y + 12, PAD + 11, y + 23], fill=theme.accent)
     owner, sep, name = page["repo"].partition("/")
@@ -87,6 +94,14 @@ def render_cover(page, theme):
     for item in page["stats"]:
         d.text((x, y), item, font=meta, fill=theme.sub)
         x += d.textlength(item, font=meta) + 44
+
+    if compact:
+        # Feed-legibility mode: headline + repo + stats + one line. Nothing else.
+        d.rectangle([PAD, 1230, W - PAD, 1233], fill=theme.ink)
+        hook = fonts.load("bold", 42)
+        for i, line in enumerate(page["hook"][:2]):
+            d.text((PAD, 1250 + i * 66), line, font=hook, fill=theme.ink)
+        return img, y + 40
 
     mid = max(830, y + 104)
     if mid > 1010:

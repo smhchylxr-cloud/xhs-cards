@@ -89,6 +89,14 @@ Every page shares `eyebrow` (small label, top-left) and `no` (top-right marker).
 
 Themes: `ikb` (Klein blue), `ink` (monochrome), `lemon`. Override the accent with `"accent": [r, g, b]`.
 
+### Compact covers
+
+A cover that carries too much reads as a document in the feed thumbnail. Set `"compact": true` (deck-level or on the cover page) to drop the `in` / `out` / `cmd` block and keep only the headline, the repo and the stats:
+
+```json
+{ "theme": "ikb", "compact": true, "pages": [ { "type": "cover", "...": "..." } ] }
+```
+
 ## What it deliberately does not do
 
 - **No AI calls.** You write the copy; this places it.

@@ -60,3 +60,44 @@ def test_jpeg_output_is_white_background(tmp_path):
     with Image.open(paths[0]) as img:
         assert img.mode == "RGB"
         assert img.getpixel((2, 2)) == (255, 255, 255) or img.getpixel((2, 2))[0] > 200
+
+
+def _band_ink(path, top=900, bottom=1150, step=4):
+    """Sample a horizontal band and count pixels darker than the paper."""
+    with Image.open(path) as img:
+        grey = img.convert("L")
+        px = grey.load()
+        return sum(
+            1
+            for y in range(top, bottom, step)
+            for x in range(0, grey.width, step)
+            if px[x, y] < 120
+        )
+
+
+def _cover_spec(compact):
+    spec = {
+        "pages": [
+            {
+                "type": "cover",
+                "eyebrow": "x",
+                "no": "NO.1",
+                "headline": ["短标题"],
+                "repo": "a/b",
+                "stats": ["1 star"],
+                "cmd": "pip install nothing",
+                "hook": ["a", "b"],
+            }
+        ]
+    }
+    if compact:
+        spec["compact"] = True
+    return spec
+
+
+def test_compact_flag_reaches_the_cover(tmp_path):
+    """A deck-level flag must reach the page dict (regression: it once did not)."""
+    plain = build(_cover_spec(False), tmp_path / "plain")
+    compact = build(_cover_spec(True), tmp_path / "compact")
+    assert _band_ink(plain[0]) > 20
+    assert _band_ink(compact[0]) == 0
