@@ -1,0 +1,16 @@
+{
+  "theme": "ikb",
+  "compact": true,
+  "pages": [
+    {
+      "type": "cover",
+      "eyebrow": "EXAMPLE",
+      "no": "NO.001",
+      "headline": ["六行 JSON", "出一张图"],
+      "repo": "you/xhs-cards",
+      "stats": ["★ 0 stars", "MIT"],
+      "cmd": "xhs-cards build minimal.json",
+      "hook": ["先能跑，再谈好看"]
+    }
+  ]
+}

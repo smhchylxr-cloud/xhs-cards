@@ -4,102 +4,107 @@
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![python](https://img.shields.io/badge/python-3.9%2B-blue)
 
-**Render 1080×1440 social card decks from a JSON spec.** Pure Pillow — no browser, no API key, no account.
+Turn a JSON file into a 1080×1440 card deck. One dependency (`Pillow`), no browser, no API key.
 
-Designed for the pipeline behind a "one GitHub project a day" account: you keep your copy in a text file, and a single command turns it into a cover plus a few content pages.
+Built for people who publish the same shape of post every day: write the copy once, render the deck with one command, upload the files.
 
-![example cover](docs/example-cover.png)
+![a rendered cover](docs/example-cover.png)
+
+## 60 seconds
 
 ```bash
 pip install xhs-cards
-xhs-cards build issue.json -o out/
-xhs-cards export out/
+
+curl -O https://raw.githubusercontent.com/smhchylxr-cloud/xhs-cards/main/examples/minimal.json
+xhs-cards build minimal.json -o out/
 ```
 
-## Why this exists
+You get `out/01_cover.png`, 1080×1440, and that is the whole loop.
 
-Most card generators are built for humans clicking around a web page. That breaks down the moment you want to produce 30 posts a week, or run it on a server, or let another program drive it.
+![output of the 60-second example](docs/quickstart.png)
 
-|  | Browser-based tools | Image-model generators | **xhs-cards** |
-|---|---|---|---|
-| Install | Chromium / Playwright (~300 MB) | Docker + API key | **`pip install`, one dependency** |
-| Cost per image | 0 | billed per image | **0** |
-| Text accuracy | high | text is rendered by a model — names and versions get mangled | **exact, it is real text** |
-| Runs in CI / cron | painful | painful | **yes** |
-| Output | manual export | manual download | **a list of file paths** |
-
-The point is not prettier cards. The point is that `render()` is a function you can call.
-
-## Quickstart
-
-`issue.json`:
+<details>
+<summary>The JSON behind that image (6 keys)</summary>
 
 ```json
 {
   "theme": "ikb",
+  "compact": true,
   "pages": [
     {
       "type": "cover",
-      "eyebrow": "每日一个 GITHUB 项目",
+      "eyebrow": "EXAMPLE",
       "no": "NO.001",
-      "headline": ["把一本技术书", "变成 AI 的", "随身技能"],
-      "repo": "acme/awesome-tool",
-      "stats": ["★ 12,345 stars", "678 fork", "MIT"],
-      "in": "一本书 / 一个 docs 目录",
-      "out": "结构化文件 + 术语表",
-      "cmd": "npx skills add acme/awesome-tool",
-      "hook": ["不是把书塞进上下文，", "是把书拆成能按需翻的技能"]
-    },
-    {
-      "type": "list",
-      "eyebrow": "它解决了什么",
-      "no": "01 / 01",
-      "h2": ["读完就忘", "不是你的错"],
-      "items": [
-        { "n": "01", "title": "书是线性的，工作不是", "desc": ["翻文档找到的是页码，不是答案。"] }
-      ],
-      "foot": ["说明", "一行小字备注"]
+      "headline": ["六行 JSON", "出一张图"],
+      "repo": "you/xhs-cards",
+      "stats": ["★ 0 stars", "MIT"],
+      "cmd": "xhs-cards build minimal.json",
+      "hook": ["先能跑，再谈好看"]
     }
   ]
 }
 ```
+</details>
+
+## Install
+
+| How | Command |
+|---|---|
+| pip | `pip install xhs-cards` |
+| uv | `uv tool install xhs-cards` |
+| from source | `git clone … && pip install -e .` |
+| Docker | `docker build -t xhs-cards .` then `docker run --rm -v "$PWD:/work" xhs-cards build issue.json -o out` |
+
+**You need a CJK font.** Without one, Chinese text renders as boxes or the loader stops with a list of paths it tried. Usually it is already there:
+
+| OS | Font it finds | If missing |
+|---|---|---|
+| Windows | 微软雅黑 (`msyh.ttc`) | preinstalled |
+| macOS | 苹方 (`PingFang.ttc`) | preinstalled |
+| Debian/Ubuntu | Noto Sans CJK | `apt install fonts-noto-cjk` |
+| Anything else | — | `export XHS_FONT_DIR=/path/to/fonts` |
+
+## What it makes
+
+Four page types, all on a 1080×1440 canvas:
+
+| Type | Use it for | Keys |
+|---|---|---|
+| `cover` | one claim, big type | `headline`, `repo`, `stats`, `cmd`, `hook` (optional `in` / `out`) |
+| `list` | 2–3 numbered arguments | `h2`, `items[{n,title,desc}]` |
+| `steps` | how to use the thing | `h2`, `steps[{n,title,desc}]` — a line starting with `$` renders as a terminal command |
+| `note` | caveats, boundaries | `h2`, `blocks[{label,lines}]` |
+
+Every page takes `eyebrow` (top-left label) and `no` (top-right marker); `list` / `steps` / `note` also take `foot: [label, text]`.
+
+Two rendering modes worth knowing:
+
+- `"compact": true` — cover keeps only headline, repo and stats. Cards you read at thumbnail size need less, not more.
+- `"texture": true` plus per-page `marks` — paper grain, felt-tip notes, circles, underlines. Details in [README › hand-made touches](#hand-made-touches).
+
+## CLI
 
 ```bash
-xhs-cards build issue.json -o out/       # -> out/01_cover.png, out/02_list.png
-xhs-cards export out/                    # -> out/upload/01_cover.jpg ...
+xhs-cards build issue.json -o out/     # → out/01_cover.png, out/02_list.png, …
+xhs-cards build issue.json --jpeg      # straight to white-background JPEG
+xhs-cards export out/                  # → out/upload/01_cover.jpg … (renamed, stripped)
 ```
 
-From Python:
+`export` is what you run before uploading: it flattens transparency onto white, drops EXIF, and numbers the files so upload order is unambiguous.
+
+## Python
 
 ```python
 from xhs_cards import build, load_spec
+
 build(load_spec("issue.json"), "out/", jpeg=True)
 ```
 
-## Page types
+It returns the list of written paths — nothing else happens, no network, no state.
 
-| Type | Use | Required keys |
-|---|---|---|
-| `cover` | the hook. One claim, big type | `headline`, `repo`, `stats`, `cmd`, `hook` (+ `in` / `out` optional) |
-| `list` | 2–3 numbered arguments | `h2`, `items[{n,title,desc}]` |
-| `steps` | how to use it, with commands | `h2`, `steps[{n,title,desc}]` (prefix a line with `$` to render it as a command) |
-| `note` | caveats, boundaries, "don't use it when" | `h2`, `blocks[{label,lines}]` |
+## Hand-made touches
 
-Every page shares `eyebrow` (small label, top-left) and `no` (top-right marker). `list` / `steps` / `note` also need `foot: [label, text]`.
-
-Themes: `ikb` (Klein blue), `ink` (monochrome), `lemon`. Override the accent with `"accent": [r, g, b]`.
-
-### Compact covers
-
-A cover that carries too much reads as a document in the feed thumbnail. Set `"compact": true` (deck-level or on the cover page) to drop the `in` / `out` / `cmd` block and keep only the headline, the repo and the stats:
-
-```json
-{ "theme": "ikb", "compact": true, "pages": [ { "type": "cover", "...": "..." } ] }
-```
-
-### Hand-made touches
-
-Clean output reads as generated. `"texture": true` adds a faint paper grain and a vignette, and any page can take pen marks:
+Clean vector output reads as generated. `"texture": true` adds faint paper grain; `marks` draws pen annotations:
 
 ```json
 { "type": "cover", "marks": [
@@ -110,36 +115,33 @@ Clean output reads as generated. `"texture": true` adds a faint paper grain and 
 ] }
 ```
 
-Commands on `steps` pages are drawn as dark terminal pills automatically.
+numpy is optional: with it you get smoother noise, without it a Pillow-only path does the same job.
 
-## What it deliberately does not do
+## Troubleshooting
 
-- **No AI calls.** You write the copy; this places it.
-- **No publishing.** It produces files. Posting stays a human action.
-- **No GUI.** It is a library and a CLI.
+| Symptom | Cause | Fix |
+|---|---|---|
+| `RuntimeError: No CJK font found` | no CJK font on PATH | `apt install fonts-noto-cjk`, or set `XHS_FONT_DIR` |
+| Chinese turns into boxes | a Latin-only font matched first | point `XHS_FONT_REGULAR` / `XHS_FONT_BOLD` at a real CJK face |
+| `LayoutError: page 2 overflows` | too much text for 1180 px | shorten the text, or split into another page |
+| Text looks soft after upload | PNG re-encoded by the platform | use `--jpeg` so it is already compressed once |
+| Emoji missing | the font has no emoji glyphs | keep emoji out of the cards |
 
-Keeping those out is why it is ~700 lines instead of a product.
+## Design choices
 
-## Fonts
+Deliberately absent: AI calls, publishing, a GUI. It renders text you wrote; posting stays a human action. That is why it is ~800 lines instead of a product.
 
-Chinese text needs a CJK font. The loader probes the usual system paths (Windows 微软雅黑, macOS 苹方, Linux Noto CJK). If yours lives elsewhere:
+Text is measured with the real font, never estimated: lines wrap by measured width, headlines shrink until they fit, and a page that still overflows fails loudly instead of drawing outside the canvas.
+
+## Development
 
 ```bash
-export XHS_FONT_DIR=/path/to/fonts          # or:
-export XHS_FONT_REGULAR=/path/to/regular.ttc
-export XHS_FONT_BOLD=/path/to/bold.ttc
-export XHS_FONT_MONO=/path/to/mono.ttf
+pip install -e ".[dev]"
+pytest -q
+xhs-cards build examples/project.json -o out/project
 ```
 
-On Debian: `apt install fonts-noto-cjk`.
-
-## Layout guarantees
-
-Text is measured with the real font, never estimated, so:
-
-- long lines wrap automatically, CJK breaks anywhere, latin prefers spaces;
-- headlines shrink (112 → 72 px) until they fit, then fail loudly rather than overflow;
-- if a page still exceeds the 1180 px safe area, `LayoutError` tells you which page and by how much.
+`examples/` holds three decks: `project.json` (project recommendation), `review.json` (tool review), `tutorial.json` (walkthrough).
 
 ## License
 
