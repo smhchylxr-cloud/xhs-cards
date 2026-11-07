@@ -37,6 +37,13 @@ CANDIDATES = {
         os.path.join(_MAC, "Menlo.ttc"),
         os.path.join(_LINUX, "truetype/dejavu/DejaVuSansMono.ttf"),
     ],
+    "hand": [
+        os.path.join(_WIN, "simkai.ttf"),
+        os.path.join(_WIN, "STKAITI.TTF"),
+        os.path.join(_MAC_SUP, "Kaiti.ttc"),
+        os.path.join(_LINUX, "opentype/noto/NotoSerifCJK-Regular.ttc"),
+        os.path.join(_LINUX, "truetype/arphic/ukai.ttc"),
+    ],
 }
 
 _cache = {}

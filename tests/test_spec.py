@@ -101,3 +101,22 @@ def test_compact_flag_reaches_the_cover(tmp_path):
     compact = build(_cover_spec(True), tmp_path / "compact")
     assert _band_ink(plain[0]) > 20
     assert _band_ink(compact[0]) == 0
+
+
+def test_paper_texture_leaves_grain(tmp_path):
+    """Texture must actually change pixels, not just be accepted as a key."""
+    spec = _cover_spec(True)
+    bare = build(spec, tmp_path / "bare")[0]
+    spec_tex = {**spec, "texture": True}
+    textured = build(spec_tex, tmp_path / "textured")[0]
+
+    def flat_std(path):
+        with Image.open(path) as img:
+            grey = img.convert("L")
+            patch = grey.crop((700, 620, 980, 820))
+            values = list(patch.tobytes())
+            mean = sum(values) / len(values)
+            return (sum((v - mean) ** 2 for v in values) / len(values)) ** 0.5
+
+    assert flat_std(bare) < 0.6
+    assert flat_std(textured) > 0.8

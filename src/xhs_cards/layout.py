@@ -2,7 +2,7 @@
 
 from PIL import Image, ImageDraw
 
-from . import fonts, text as T
+from . import decor, fonts, text as T
 from .theme import Theme
 
 W, H = 1080, 1440
@@ -34,6 +34,34 @@ def _check(page, index):
 def _canvas(theme):
     img = Image.new("RGB", (W, H), theme.paper)
     return img, ImageDraw.Draw(img)
+
+
+def _decorate(img, page):
+    """Apply the optional pen marks a page asks for: notes, circles, underlines."""
+    for mark in page.get("marks", []):
+        kind = mark.get("kind")
+        if kind == "note":
+            decor.note(
+                img,
+                tuple(mark["xy"]),
+                mark["text"],
+                size=mark.get("size", 44),
+                angle=mark.get("angle", -2.0),
+                color=tuple(mark.get("color", (176, 58, 48))),
+            )
+        elif kind == "circle":
+            decor.circle(
+                img,
+                tuple(mark["center"]),
+                mark.get("rx", 44),
+                mark.get("ry", 36),
+                angle=mark.get("angle", -4),
+            )
+        elif kind == "underline":
+            decor.underline(img, mark["x0"], mark["x1"], mark["y"])
+        elif kind == "highlight":
+            img = decor.highlight(img, mark["box"], alpha=mark.get("alpha", 70))
+    return img
 
 
 def _head(d, page, theme):
@@ -101,7 +129,7 @@ def render_cover(page, theme):
         hook = fonts.load("bold", 42)
         for i, line in enumerate(page["hook"][:2]):
             d.text((PAD, 1250 + i * 66), line, font=hook, fill=theme.ink)
-        return img, y + 40
+        return _decorate(img, page), y + 40
 
     mid = max(830, y + 104)
     if mid > 1010:
@@ -128,7 +156,7 @@ def render_cover(page, theme):
         d.text((PAD, 1256 + i * 62), line, font=hook, fill=theme.ink)
 
     # The hook band is fixed furniture; the checkable content ends at the command line.
-    return img, mid + 300
+    return _decorate(img, page), mid + 300
 
 
 def render_list(page, theme):
@@ -160,7 +188,7 @@ def render_list(page, theme):
         y = ty + 46
 
     _foot(d, page, theme)
-    return img, y
+    return _decorate(img, page), y
 
 
 def render_steps(page, theme):
@@ -183,6 +211,9 @@ def render_steps(page, theme):
         for raw in step.get("desc", []):
             is_cmd = raw.startswith("$")
             content = raw[1:].strip() if is_cmd else raw
+            if is_cmd and not T.has_cjk(content):
+                ty = decor.pill(img, (PAD + 96, ty), content, size=25) + 18
+                continue
             kind = _mono_or_text(content)
             font = fonts.load(kind, 27 if kind == "mono" else 26)
             colour = theme.accent if is_cmd else theme.sub
@@ -192,7 +223,7 @@ def render_steps(page, theme):
         y = ty + 48
 
     _foot(d, page, theme)
-    return img, y
+    return _decorate(img, page), y
 
 
 def render_note(page, theme):
@@ -219,7 +250,7 @@ def render_note(page, theme):
         y = ty + 44
 
     _foot(d, page, theme)
-    return img, y
+    return _decorate(img, page), y
 
 
 RENDERERS = {
@@ -239,4 +270,6 @@ def render_page(page, index, theme):
             f"content ends at {lowest}px, limit is {SAFE_BOTTOM}px. "
             f"Shorten the text or split the page."
         )
+    if page.get("texture"):
+        img = decor.paper(img)
     return img

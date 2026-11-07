@@ -97,6 +97,21 @@ A cover that carries too much reads as a document in the feed thumbnail. Set `"c
 { "theme": "ikb", "compact": true, "pages": [ { "type": "cover", "...": "..." } ] }
 ```
 
+### Hand-made touches
+
+Clean output reads as generated. `"texture": true` adds a faint paper grain and a vignette, and any page can take pen marks:
+
+```json
+{ "type": "cover", "marks": [
+  { "kind": "note",      "xy": [96, 968], "text": "这套图就是它出的", "size": 48, "angle": -2.2 },
+  { "kind": "underline", "x0": 96, "x1": 560, "y": 1032 },
+  { "kind": "circle",    "center": [110, 494], "rx": 46, "ry": 36 },
+  { "kind": "highlight", "box": [88, 700, 460, 760], "alpha": 70 }
+] }
+```
+
+Commands on `steps` pages are drawn as dark terminal pills automatically.
+
 ## What it deliberately does not do
 
 - **No AI calls.** You write the copy; this places it.
