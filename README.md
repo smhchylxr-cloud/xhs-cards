@@ -1,5 +1,9 @@
 # xhs-cards
 
+[![ci](https://github.com/smhchylxr-cloud/xhs-cards/actions/workflows/ci.yml/badge.svg)](https://github.com/smhchylxr-cloud/xhs-cards/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![python](https://img.shields.io/badge/python-3.9%2B-blue)
+
 **Render 1080×1440 social card decks from a JSON spec.** Pure Pillow — no browser, no API key, no account.
 
 Designed for the pipeline behind a "one GitHub project a day" account: you keep your copy in a text file, and a single command turns it into a cover plus a few content pages.
