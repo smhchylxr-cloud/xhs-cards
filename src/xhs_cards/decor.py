@@ -8,41 +8,66 @@ note in a handwriting face, a command in a dark terminal pill.
 import math
 import random
 
-import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 from . import fonts
 
 PEN = (176, 58, 48)
 HILITE = (255, 214, 64)
 
+try:  # optional: numpy gives smoother noise, but the library ships Pillow-only
+    import numpy as _np
+except ImportError:  # pragma: no cover - exercised on a bare install
+    _np = None
+
 
 def paper(img, grain=1.2, mottle=0.0, cells=48, vignette=0.05, seed=7):
-    """Paper, not pixels: slow blotching carries the texture, grain only breaks banding.
+    """Paper, not pixels: faint grain and a vignette, tuned to stay small in JPEG.
 
     Fine grain is expensive in JPEG bytes and gets smeared by the platform's own
-    re-compression, so it stays low; the low-frequency mottling is what reads as paper.
+    re-compression, so it stays low. numpy is optional; without it a Pillow-only
+    path produces the same effect.
     """
-    arr = np.asarray(img).astype(np.float32)
-    rng = np.random.default_rng(seed)
-    h, w = arr.shape[:2]
+    w, h = img.size
+    if _np is None:
+        return _paper_pil(img, grain, vignette)
 
+    arr = _np.asarray(img).astype(_np.float32)
+    rng = _np.random.default_rng(seed)
     arr += rng.normal(0, grain, (h, w))[..., None]
 
-    # Low-frequency mottling: what actually reads as paper rather than film grain.
-    cells = cells
-    small = rng.normal(0, 1, (cells, cells))
-    span = np.ptp(small) + 1e-6
-    blot = Image.fromarray(((small - small.min()) / span * 255).astype(np.uint8))
-    blot = blot.resize((w, h), Image.BICUBIC)
-    flat = np.asarray(blot).astype(np.float32)
-    arr += ((flat - flat.mean()) / (flat.std() + 1e-6) * mottle)[..., None]
+    if mottle:
+        small = rng.normal(0, 1, (cells, cells))
+        span = _np.ptp(small) + 1e-6
+        blot = Image.fromarray(((small - small.min()) / span * 255).astype(_np.uint8))
+        flat = _np.asarray(blot.resize((w, h), Image.BICUBIC)).astype(_np.float32)
+        arr += ((flat - flat.mean()) / (flat.std() + 1e-6) * mottle)[..., None]
 
-    yy, xx = np.mgrid[0:h, 0:w]
-    d = np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) / math.sqrt(2)
+    yy, xx = _np.mgrid[0:h, 0:w]
+    d = _np.sqrt(((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) / math.sqrt(2)
     arr *= (1 - vignette * d)[..., None]
 
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8))
+    return Image.fromarray(_np.clip(arr, 0, 255).astype(_np.uint8))
+
+
+def _paper_pil(img, grain, vignette):
+    """Same look with nothing but Pillow."""
+    w, h = img.size
+    out = img.convert("RGB")
+
+    if grain:
+        noise = Image.effect_noise((w, h), 24).convert("L")
+        k = grain / 24.0
+        jitter = noise.point(lambda v: max(0, min(255, int((v - 128) * k + 128))))
+        out = ImageChops.add(out, jitter.convert("RGB"), scale=1.0, offset=-128)
+
+    if vignette:
+        mask = Image.radial_gradient("L").resize((w, h))
+        strength = int(vignette * 255)
+        mask = mask.point(lambda v: 255 - int(v * strength / 255))
+        out = ImageChops.multiply(out, mask.convert("RGB"))
+
+    return out
 
 
 def _layer(size):
