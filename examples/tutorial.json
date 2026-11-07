@@ -1,0 +1,41 @@
+{
+  "theme": "lemon",
+  "pages": [
+    {
+      "type": "cover",
+      "eyebrow": "技能拆解",
+      "no": "NO.003",
+      "headline": ["一个命令", "把周报", "写完"],
+      "repo": "acme/weekly-report",
+      "stats": ["★ 2,800 stars", "190 fork", "MIT"],
+      "in": "本周的 commit / issue / 聊天记录",
+      "out": "一份能直接发的周报",
+      "cmd": "pip install weekly-report && weekly-report init",
+      "hook": ["周报不是写作任务", "是信息整理任务"]
+    },
+    {
+      "type": "steps",
+      "eyebrow": "三步跑通",
+      "no": "01 / 02",
+      "h2": ["三步", "跑通"],
+      "steps": [
+        { "n": "01", "title": "接上数据源", "desc": ["$weekly-report init", "GitHub / GitLab / 本地 git 都支持"] },
+        { "n": "02", "title": "生成草稿", "desc": ["$weekly-report build --week last", "按主题聚类，不是按时间堆叠"] },
+        { "n": "03", "title": "人工过一遍", "desc": ["$weekly-report edit", "删掉不该让老板看到的，补一句判断"] }
+      ],
+      "foot": ["注意", "自动聚类会把两件事并成一件，务必人工复核"]
+    },
+    {
+      "type": "note",
+      "eyebrow": "为什么值得",
+      "no": "02 / 02",
+      "h2": ["省下的", "不是打字时间"],
+      "blocks": [
+        { "label": "省的是回忆", "lines": ["周五下午最贵的不是写，是想这周干了什么。"] },
+        { "label": "逼你留痕", "lines": ["commit message 写得烂，周报就难看——反过来改习惯。"] },
+        { "label": "边界", "lines": ["它不替你判断重要性，只负责把材料摆齐。"] }
+      ],
+      "foot": ["示例内容", "用于演示 lemon 主题与步骤页"]
+    }
+  ]
+}

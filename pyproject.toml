@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xhs-cards"
+version = "0.1.0"
+description = "Render 1080x1440 social card decks from a JSON spec. Pure Pillow, no browser, no API key."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["xiaohongshu", "rednote", "cards", "typesetting", "image-generation", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Text Processing :: Markup",
+]
+dependencies = ["Pillow>=9.2.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+xhs-cards = "xhs_cards.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xhs_cards"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
