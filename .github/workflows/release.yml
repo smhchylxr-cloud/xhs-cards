@@ -1,0 +1,47 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install .
+          pip install pyinstaller
+
+      - name: Build one-file exe
+        run: |
+          pyinstaller --onefile --name xhs-cards `
+            --collect-all PIL `
+            --add-data "examples;examples" `
+            packaging/entry.py
+
+      - name: Smoke test the exe
+        run: |
+          ./dist/xhs-cards.exe --version
+          ./dist/xhs-cards.exe build examples/minimal.json -o exe-out
+          Get-ChildItem exe-out
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/xhs-cards.exe
+          body: |
+            下载 `xhs-cards.exe`，双击即可用（不需要装 Python）。
+
+            - `xhs-cards.exe serve --open` 打开本地网页，粘 JSON 出图
+            - `xhs-cards.exe build issue.json -o out` 命令行出图
+
+            中文字体用系统自带的微软雅黑，无需额外安装。

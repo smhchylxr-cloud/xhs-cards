@@ -23,7 +23,17 @@ def main(argv=None):
     export_cmd.add_argument("src")
     export_cmd.add_argument("-o", "--out", default=None)
 
+    serve_cmd = sub.add_parser("serve", help="open a local web UI (no terminal needed)")
+    serve_cmd.add_argument("--port", type=int, default=8000)
+    serve_cmd.add_argument("--host", default="127.0.0.1")
+    serve_cmd.add_argument("--open", action="store_true", help="open the browser")
+
     args = parser.parse_args(argv)
+    if args.command == "serve":
+        from .serve import serve
+
+        serve(host=args.host, port=args.port, open_browser=args.open)
+        return 0
     if args.command == "build":
         spec = load_spec(args.spec)
         out = args.out or (args.spec.rsplit(".", 1)[0] + "_out")

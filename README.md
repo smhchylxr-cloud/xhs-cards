@@ -64,6 +64,23 @@ You get `out/01_cover.png`, 1080×1440, and that is the whole loop.
 | Debian/Ubuntu | Noto Sans CJK | `apt install fonts-noto-cjk` |
 | Anything else | — | `export XHS_FONT_DIR=/path/to/fonts` |
 
+## Two ways in
+
+| You are… | Use |
+|---|---|
+| comfortable with a terminal | the CLI below |
+| not installing Python | **download `xhs-cards.exe` from [Releases](https://github.com/smhchylxr-cloud/xhs-cards/releases/latest)**, double-click, then `serve --open` |
+| on macOS or Linux without Python | `uv tool install xhs-cards && xhs-cards serve --open` |
+
+### The no-terminal route
+
+`xhs-cards serve --open` starts a small page at `http://127.0.0.1:8000`: paste JSON on the left, press 生成, the images appear on the right — right-click to save. Nothing leaves your machine, and the server only listens on localhost.
+
+```bash
+xhs-cards serve --open          # pip / uv installs
+xhs-cards.exe serve --open      # the Windows build
+```
+
 ## What it makes
 
 Four page types, all on a 1080×1440 canvas:
